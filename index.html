@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恐龙捕食选择 · 双重挑战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+
+        body {
+            background: url('y.jpg') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+            padding: 20px;
+            min-height: 100vh;
+            transition: background-image 0.5s ease;
+        }
+
+        .game-main {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: none;
+            transition: transform 0.8s ease;
+            transform-origin: center top;
+        }
+
+        .game-main.shrink {
+            transform: scale(0.85);
+        }
+
+        .game-title {
+            text-align: center;
+            color: #000;
+            margin-bottom: 30px;
+            font-size: 28px;
+            opacity: 0;
+            transform: translateY(-50px);
+            transition: all 1s ease 0.2s;
+        }
+        .game-subtitle {
+            text-align: center;
+            color: #000;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin: 0 auto 30px;
+            display: block;
+            width: fit-content;
+            opacity: 0;
+            transform: translateY(-50px);
+            transition: all 1s ease 0.4s;
+        }
+        .battle-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
+        }
+        .food-side {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .food-side.left {
+            opacity: 0;
+            transform: translateX(-100px);
+            transition: all 1.2s ease 0.6s;
+        }
+        .food-side.right {
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 1.2s ease 0.6s;
+        }
+        .food-row {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 170px;
+            margin-left: 80px;
+            margin-right: 80px;
+        }
+        .drag-food {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+            transition: opacity 0.5s ease, transform 0.2s;
+        }
+        .drag-food:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+        .food-emoji {
+            margin-top: 50px;
+            display: inline-block;
+            width: 80px;
+            height: 55px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            flex-shrink: 0;
+            border: 2px solid #000;
+        }
+        .food-name {
+            font-size: 14px;
+            color: #000;
+        }
+        .dino-arena {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dino-card {
+            width: 250px;
+            height: 350px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            opacity: 0;
+            transform: translateY(-80px);
+            transition: all 1.2s ease 0.3s;
+        }
+        .dino-face {
+            width: 450px;
+            height: 450px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .mouth-dropzone {
+            width: 300px;
+            height: 300px;
+            background: transparent !important;
+            border: none !important;
+            color: transparent !important;
+            font-size: 0;
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .win-poster-text {
+            margin-top: 100px;
+            display: none;
+            position: relative;
+            width: 100%;
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        
+        }
+        .win-title-main {
+            font-size: 55px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 50px;
+            letter-spacing: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        .win-title-sub {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .win-english-name {
+            font-size: 22px;
+            color: #666;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: normal;
+        }
+        .win-title-english-wrap {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            margin: 30px auto;
+            font-size: 72px;
+            font-weight: bold;
+            color: #000;
+            letter-spacing: 5px;
+            width: 100%;
+            text-align: center;
+        }
+        .win-title-left, .win-title-right {
+            display: inline-block;
+            transition: transform 1.2s ease, opacity 1.2s ease;
+        }
+        .win-title-img {
+            width: 300px;
+            height: auto;
+            margin: 0 -30px;
+            transition: transform 1.2s ease, opacity 1.2s ease;
+        }
+        .win-description {
+            font-size: 14px;
+            color: #444;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+            transition: transform 1.2s ease, opacity 1.2s ease;
+        }
+
+        .info-badge {
+            color: #060505;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease 0.8s;
+        }
+        .tip-text {
+            text-align: center;
+            margin-top: 30px;
+            color: #000;
+            font-size: 16px;
+        }
+
+        .button-group, .back-only-group {
+            display: none !important;
+        }
+
+        .popup-tip {
+            display: none !important;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0) rotate(0deg); }
+            15% { transform: translateX(-8px) rotate(-3deg); }
+            30% { transform: translateX(8px) rotate(3deg); }
+            45% { transform: translateX(-6px) rotate(-2deg); }
+            60% { transform: translateX(6px) rotate(2deg); }
+            75% { transform: translateX(-4px) rotate(-1deg); }
+            90% { transform: translateX(4px) rotate(1deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        .dino-shake {
+            animation: shake 0.6s ease-in-out;
+        }
+
+        .end-bottom-screen {
+            display: none;
+            max-width: 1000px;
+            margin: 30px auto 0;
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(6px);
+        }
+
+        .win-poster-text.animate-out .win-title-left {
+            transform: translateX(-1000px);
+            opacity: 0;
+        }
+        .win-poster-text.animate-out .win-title-right {
+            transform: translateX(1000px);
+            opacity: 0;
+        }
+        .win-poster-text.animate-out .win-title-img,
+        .win-poster-text.animate-out .win-title-main,
+        .win-poster-text.animate-out .win-title-sub,
+        .win-poster-text.animate-out .win-english-name,
+        .win-poster-text.animate-out .win-description {
+            transform: translateY(800px);
+            opacity: 0;
+        }
+
+        .game-main.animate-in .game-title,
+        .game-main.animate-in .game-subtitle {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .game-main.animate-in .dino-card {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .game-main.animate-in .food-side.left {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .game-main.animate-in .food-side.right {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .game-main.animate-in .info-badge {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #winPoster1 .win-title-main {
+            font-size: 55px !important;
+            margin-bottom: 40px !important;
+            letter-spacing: 15px !important;
+        }
+        #winPoster1 .win-title-sub {
+            font-size: 18px !important;
+            margin-bottom: 25px !important;
+        }
+        #winPoster1 .win-english-name {
+            font-size: 18px !important;
+            margin-left: 0px !important;
+            margin-bottom: 15px !important;
+        }
+        #winPoster1 .win-title-english-wrap {
+            font-size: 70px !important;
+            margin: 20px auto !important;
+            letter-spacing: 1px !important;
+        }
+        #winPoster1 .win-title-img {
+            width: 300px !important;
+            margin: 0 -30px !important;
+        }
+        #winPoster1 .win-description {
+            font-size: 14px !important;
+            margin: 40px auto !important;
+        }
+
+        #winPoster2 .win-title-main {
+            font-size: 55px !important;
+            margin-bottom: 20px !important;
+            letter-spacing: 15px !important;
+            margin-left: 0px !important;
+            margin-right: 0px !important;
+        }
+        #winPoster2 .win-title-sub {
+            font-size: 18px !important;
+            margin-bottom: 15px !important;
+            margin-left: 0px !important;
+            margin-right: 0px !important;
+            text-align: center !important;
+        }
+        #winPoster2 .win-english-name {
+            font-size: 18px !important;
+            margin-left: 0px !important;
+            margin-bottom: 20px !important;
+            color: #333 !important;
+        }
+        #winPoster2 .win-title-english-wrap {
+            font-size: 80px !important;
+            margin: 0 auto 15px !important;
+            letter-spacing: 1px !important;
+            margin: 0 -100px !important;
+        }
+        #winPoster2 .win-title-img {
+            width: 500px !important;
+            margin: 0 -90px !important;
+        }
+        #winPoster2 .win-description {
+            font-size: 14px !important;
+            margin: 20px auto !important;
+        }
+
+        @media (max-width: 768px) {
+            .battle-grid {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .food-row {
+                flex-direction: row;
+                gap: 15px;
+                margin: 0;
+            }
+            .food-side {
+                width: 100%;
+                flex-direction: row;
+                justify-content: center;
+            }
+            .dino-face {
+                width: 300px;
+                height: 300px;
+            }
+            .win-title-english-wrap {
+                font-size: 36px;
+            }
+            .win-title-img {
+                width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-main" id="game1">
+    <h1 class="game-title">兽脚亚目·捕食选择</h1>
+    <p class="game-subtitle">食物配对 | 纯肉食捕食者</p>
+    <div class="battle-grid">
+        <div class="food-side left">
+            <div class="food-row">
+                <div class="drag-food" draggable="true" data-food-type="meat">
+                    <span class="food-emoji" style="background-image: url('Dd.png');"></span>
+                </div>
+                <div class="drag-food" draggable="true" data-food-type="fruit">
+                    <span class="food-emoji" style="background-image: url('Aa.png');"></span>
+                </div>
+            </div>
+        </div>
+        <div class="dino-arena">
+            <div class="dino-card">
+                <div class="dino-face" id="dinoFace1" style="background-image: url('E.png');"></div>
+                <div id="dinoMouth1" class="mouth-dropzone">拖到这里</div>
+            </div>
+            <div class="win-poster-text" id="winPoster1">
+                <div class="win-title-main">摩洛哥棘龙</div>
+                <div class="win-title-sub">肉食恐龙，以鲜肉为食</div>
+                <div class="win-english-name">Carnivorous dinosaur, feeds on fresh meat.</div>
+                <div class="win-title-english-wrap">
+                    <span class="win-title-left">Spinosaurus</span>
+                    <img src="E.png" alt="恐龙" class="win-title-img">
+                    <span class="win-title-right">marrocanus</span>
+                </div>
+                <div class="win-description">
+                    兽脚亚目是恐龙中的肉食霸主，它们拥有锋利的牙齿和强壮的后肢，以捕猎其他动物为生。<br>
+                    体型数据：体长可达6-15米，体重可达数吨，奔跑速度快，行动敏捷。<br>
+                    关于它是否属于一个独立物种，学界一直存在大量争议（部分研究认为它和本系列后续介绍的恐龙是同一物种），但许多古生物学家认为，其地理分布与生存时间足以支撑它作为棘龙属内的独立物种。如果后一种观点成立，这种兽脚类恐龙很可能生活在以大型湖泊、河流为主的环境中，这也导致它的行为模式大概率与近亲类似：是一种半水生捕食者，主食大型鱼类，偶尔也会 opportunistically（机会主义地）捕食小型陆地猎物。
+                </div>
+            </div>
+            <div class="info-badge">古生物恐龙 · 兽脚亚目纯肉食</div>
+        </div>
+        <div class="food-side right">
+            <div class="food-row">
+                <div class="drag-food" draggable="true" data-food-type="veg">
+                    <span class="food-emoji" style="background-image: url('Cc.png');"></span>
+                </div>
+                <div class="drag-food" draggable="true" data-food-type="grass">
+                    <span class="food-emoji" style="background-image: url('Bb.png');"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="game-main" id="game2">
+    <h1 class="game-title">鸟脚亚目·嘴巴选择</h1>
+    <p class="game-subtitle">鸟脚亚目没角没甲没刺，只有一张喙</p>
+    <div class="battle-grid">
+        <div class="food-side left">
+            <div class="food-row">
+                <div class="drag-food" draggable="true" data-food-type="meat">
+                    <span class="food-emoji" style="background-image: url('11.png');"></span>
+                    <span class="food-name">尖牙利嘴</span>
+                </div>
+                <div class="drag-food" draggable="true" data-food-type="fruit">
+                    <span class="food-emoji" style="background-image: url('22.png');"></span>
+                    <span class="food-name">鸟嘴</span>
+                </div>
+            </div>
+        </div>
+        <div class="dino-arena">
+            <div class="dino-card">
+                <div class="dino-face" id="dinoFace2" style="background-image: url('5.png');"></div>
+                <div id="dinoMouth2" class="mouth-dropzone">拖到这里</div>
+            </div>
+            <div class="win-poster-text" id="winPoster2">
+                <div class="win-title-main">嘉荫卡戎龙</div>
+                <div class="win-title-sub">植食恐龙，以喙状嘴啃食植物</div>
+                <div class="win-english-name">Herbivore: beak mouth feeding on plants.</div>
+                <div class="win-title-english-wrap">
+                    <span class="win-title-left">Charonosaurus</span>
+                    <img src="5.png" alt="恐龙" class="win-title-img">
+                    <span class="win-title-right">Jiayinensis</span>
+                </div>
+                <div class="win-description">
+                    鸟脚亚目是恐龙中的植食家族，它们拥有喙状的嘴巴，适合啃食树叶和植物。<br>
+                    恐龙总目-鸟臀目-鸟脚亚目-鸭嘴龙科-赖氏龙亚科-卡戎龙属-嘉荫卡戎龙种【又名查龙或冥府渡神龙，化石头骨部分显示有管状物从额骨的背侧面向后伸延，可能有着与副栉龙极为相似的头冠】体长估测约13米，体重约10吨，生存于晚白垩纪中国黑龙江和俄罗斯地区。
+                </div>
+            </div>
+            <div class="info-badge">古生物恐龙 · 鸟脚亚目</div>
+        </div>
+        <div class="food-side right">
+            <div class="food-row">
+                <div class="drag-food" draggable="true" data-food-type="veg">
+                    <span class="food-emoji" style="background-image: url('33.png');"></span>
+                    <span class="food-name">鸭嘴</span>
+                </div>
+                <div class="drag-food" draggable="true" data-food-type="grass">
+                    <span class="food-emoji" style="background-image: url('44.png');"></span>
+                    <span class="food-name">厚嘴</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="end-bottom-screen" id="endBottomScreen"></div>
+
+<script>
+    (function() {
+        const WAIT_TIME = 5000;
+
+        const game1 = document.getElementById('game1');
+        const game2 = document.getElementById('game2');
+        const endBottomScreen = document.getElementById('endBottomScreen');
+
+        function shakeDino(dinoFaceElement) {
+            if(!dinoFaceElement) return;
+            dinoFaceElement.classList.remove('dino-shake');
+            void dinoFaceElement.offsetWidth;
+            dinoFaceElement.classList.add('dino-shake');
+            setTimeout(() => dinoFaceElement.classList.remove('dino-shake'), 600);
+        }
+
+        function playAnimation(target) {
+            setTimeout(() => {
+                target.classList.add('animate-in');
+            }, 100);
+        }
+
+        // 重置游戏界面
+        function resetGame(gameId, posterId) {
+            const g = document.getElementById(gameId);
+            const poster = document.getElementById(posterId);
+            
+            g.classList.remove('shrink', 'animate-in');
+            poster.classList.remove('animate-out');
+            poster.style.display = 'none';
+
+            g.querySelector('.game-title').style.display = 'block';
+            g.querySelector('.game-subtitle').style.display = 'block';
+            g.querySelectorAll('.food-side, .dino-card, .info-badge').forEach(el => el.style.display = 'flex');
+        }
+
+        function gameWin(currentGameId, winPosterId) {
+            const wrap = document.getElementById(currentGameId);
+            const poster = document.getElementById(winPosterId);
+            
+            wrap.classList.add('shrink');
+            endBottomScreen.style.display = 'block';
+            wrap.querySelector('.game-title').style.display = 'none';
+            wrap.querySelector('.game-subtitle').style.display = 'none';
+            wrap.querySelectorAll('.food-side, .info-badge, .dino-card').forEach(el => el.style.display = 'none');
+            poster.style.display = 'block';
+
+            setTimeout(() => {
+                poster.classList.add('animate-out');
+                setTimeout(() => {
+                    if (currentGameId === 'game1') {
+                        game1.style.display = 'none';
+                        game2.style.display = 'block';
+                        resetGame('game1', 'winPoster1');
+                        playAnimation(game2);
+                    } else {
+                        // ====================== 核心逻辑：游戏二结束 → 回到游戏一食物选择界面 ======================
+                        game2.style.display = 'none';
+                        game1.style.display = 'block';
+                        resetGame('game2', 'winPoster2');
+                        resetGame('game1', 'winPoster1');
+                        endBottomScreen.style.display = 'none';
+                        playAnimation(game1);
+                    }
+                }, 1200);
+            }, WAIT_TIME);
+        }
+
+        function initGame1() {
+            const mouth = document.getElementById('dinoMouth1');
+            const foods = game1.querySelectorAll('.drag-food');
+            const dinoFace = document.getElementById('dinoFace1');
+
+            foods.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item.dataset.foodType);
+                    item.style.opacity = '0.5';
+                });
+                item.addEventListener('dragend', () => item.style.opacity = '1');
+            });
+
+            mouth.addEventListener('dragover', (e) => e.preventDefault());
+            mouth.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.getData('text/plain') === 'meat') {
+                    shakeDino(dinoFace);
+                    gameWin('game1', 'winPoster1');
+                }
+            });
+        }
+
+        function initGame2() {
+            const mouth = document.getElementById('dinoMouth2');
+            const foods = game2.querySelectorAll('.drag-food');
+            const dinoFace = document.getElementById('dinoFace2');
+
+            foods.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', item.dataset.foodType);
+                    item.style.opacity = '0.5';
+                });
+                item.addEventListener('dragend', () => item.style.opacity = '1');
+            });
+
+            mouth.addEventListener('dragover', (e) => e.preventDefault());
+            mouth.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.getData('text/plain') === 'fruit') {
+                    shakeDino(dinoFace);
+                    gameWin('game2', 'winPoster2');
+                }
+            });
+        }
+
+        window.addEventListener('load', () => {
+            game1.style.display = 'block';
+            game2.style.display = 'none';
+            playAnimation(game1);
+            initGame1();
+            initGame2();
+        });
+    })();
+</script>
+</body>
+</html>
