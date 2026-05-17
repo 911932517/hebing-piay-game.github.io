@@ -37,7 +37,7 @@
             text-align: center;
             color: #000;
             margin-bottom: 30px;
-            font-size: 35px;
+            font-size: 28px;
             opacity: 0;
             transform: translateY(-50px);
             transition: all 1s ease 0.2s;
@@ -48,7 +48,7 @@
             display: inline-block;
             padding: 5px 15px;
             border-radius: 20px;
-            font-size: 16px;
+            font-size: 14px;
             margin: 0 auto 30px;
             display: block;
             width: fit-content;
@@ -141,13 +141,8 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            transition: filter 0.3s ease;
         }
-        /* 错误时变灰（已修改） */
-        .dino-face.gray {
-            filter: grayscale(100%);
-        }
-
+        
         .mouth-dropzone {
             width: 300px;
             height: 300px;
@@ -320,44 +315,42 @@
 
         #winPoster1 .win-title-main {
             font-size: 55px !important;
-            margin-bottom: 30px !important;
+            margin-bottom: 40px !important;
             letter-spacing: 15px !important;
-            color: #000000 !important;
         }
         #winPoster1 .win-title-sub {
             font-size: 18px !important;
             margin-bottom: 25px !important;
-            color: #000000 !important;
+             color: #000;
         }
         #winPoster1 .win-english-name {
             font-size: 18px !important;
             margin-left: 0px !important;
             margin-bottom: 15px !important;
-            color: #000000 !important;
+            color: #000;
         }
         #winPoster1 .win-title-english-wrap {
             font-size: 70px !important;
             margin: 20px auto !important;
             letter-spacing: 1px !important;
-            color: #000000 !important;
+            color: #000;
         }
         #winPoster1 .win-title-img {
             width: 300px !important;
             margin: 0 -30px !important;
         }
         #winPoster1 .win-description {
-            font-size: 14px !important;
+            font-size: 16px !important;
             margin: 40px auto !important;
-            color: #000000 !important;
+            color: #000;
         }
 
         #winPoster2 .win-title-main {
-            font-size: 60px !important;
-            margin-bottom: 30px !important;
+            font-size: 55px !important;
+            margin-bottom: 20px !important;
             letter-spacing: 15px !important;
             margin-left: 0px !important;
             margin-right: 0px !important;
-            color: #000000 !important;
         }
         #winPoster2 .win-title-sub {
             font-size: 18px !important;
@@ -365,13 +358,12 @@
             margin-left: 0px !important;
             margin-right: 0px !important;
             text-align: center !important;
-            color: #000000 !important;
         }
         #winPoster2 .win-english-name {
             font-size: 18px !important;
             margin-left: 0px !important;
             margin-bottom: 20px !important;
-            color: #000000 !important;
+            color: #010101 !important;
         }
         #winPoster2 .win-title-english-wrap {
             font-size: 80px !important;
@@ -384,9 +376,9 @@
             margin: 0 -90px !important;
         }
         #winPoster2 .win-description {
-            font-size: 14px !important;
+            font-size: 16px !important;
             margin: 20px auto !important;
-            color: #000000 !important;
+            color: #000;
         }
 
         @media (max-width: 768px) {
@@ -524,14 +516,11 @@
 
 <script>
     (function() {
-        const WAIT_TIME = 4000;
+        const WAIT_TIME = 5000;
 
         const game1 = document.getElementById('game1');
         const game2 = document.getElementById('game2');
         const endBottomScreen = document.getElementById('endBottomScreen');
-
-        // 记录当前拖拽的元素
-        let currentDraggedElement = null;
 
         function shakeDino(dinoFaceElement) {
             if(!dinoFaceElement) return;
@@ -539,14 +528,6 @@
             void dinoFaceElement.offsetWidth;
             dinoFaceElement.classList.add('dino-shake');
             setTimeout(() => dinoFaceElement.classList.remove('dino-shake'), 600);
-        }
-
-        // 错误反馈：恐龙变灰，1秒后恢复
-        function wrongAnswer(dinoFaceElement) {
-            dinoFaceElement.classList.add('gray');
-            setTimeout(() => {
-                dinoFaceElement.classList.remove('gray');
-            }, 1000);
         }
 
         function playAnimation(target) {
@@ -589,6 +570,7 @@
                         resetGame('game1', 'winPoster1');
                         playAnimation(game2);
                     } else {
+                        // ====================== 核心逻辑：游戏二结束 → 回到游戏一食物选择界面 ======================
                         game2.style.display = 'none';
                         game1.style.display = 'block';
                         resetGame('game2', 'winPoster2');
@@ -607,26 +589,18 @@
 
             foods.forEach(item => {
                 item.addEventListener('dragstart', (e) => {
-                    currentDraggedElement = item;
                     e.dataTransfer.setData('text/plain', item.dataset.foodType);
                     item.style.opacity = '0.5';
                 });
-                item.addEventListener('dragend', () => {
-                    item.style.opacity = '1';
-                    currentDraggedElement = null;
-                });
+                item.addEventListener('dragend', () => item.style.opacity = '1');
             });
 
             mouth.addEventListener('dragover', (e) => e.preventDefault());
             mouth.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const type = e.dataTransfer.getData('text/plain');
-                if (type === 'meat') {
+                if (e.dataTransfer.getData('text/plain') === 'meat') {
                     shakeDino(dinoFace);
                     gameWin('game1', 'winPoster1');
-                } else {
-                    // 错误：恐龙变灰，食物回弹
-                    wrongAnswer(dinoFace);
                 }
             });
         }
@@ -638,26 +612,18 @@
 
             foods.forEach(item => {
                 item.addEventListener('dragstart', (e) => {
-                    currentDraggedElement = item;
                     e.dataTransfer.setData('text/plain', item.dataset.foodType);
                     item.style.opacity = '0.5';
                 });
-                item.addEventListener('dragend', () => {
-                    item.style.opacity = '1';
-                    currentDraggedElement = null;
-                });
+                item.addEventListener('dragend', () => item.style.opacity = '1');
             });
 
             mouth.addEventListener('dragover', (e) => e.preventDefault());
             mouth.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const type = e.dataTransfer.getData('text/plain');
-                if (type === 'fruit') {
+                if (e.dataTransfer.getData('text/plain') === 'fruit') {
                     shakeDino(dinoFace);
                     gameWin('game2', 'winPoster2');
-                } else {
-                    // 错误：恐龙变灰，食物回弹
-                    wrongAnswer(dinoFace);
                 }
             });
         }
