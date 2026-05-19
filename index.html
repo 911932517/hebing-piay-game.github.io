@@ -141,8 +141,12 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
+            transition: filter 0.3s ease;
         }
-        
+        .dino-face.grayscale {
+            filter: grayscale(100%);
+        }
+
         .mouth-dropzone {
             width: 300px;
             height: 300px;
@@ -411,6 +415,14 @@
 </head>
 <body>
 
+<!-- 胜利音效 + 错误音效 -->
+<audio id="winSound" preload="auto">
+    <source src="dd.mp3" type="audio/mpeg">
+</audio>
+<audio id="failSound" preload="auto">
+    <source src="cc.mp3" type="audio/mpeg">
+</audio>
+
 <div class="game-main" id="game1">
     <h1 class="game-title">兽脚亚目·捕食选择</h1>
     <p class="game-subtitle">食物配对 | 纯肉食捕食者</p>
@@ -517,6 +529,11 @@
 <script>
     (function() {
         const WAIT_TIME = 5000;
+        const SOUND_DELAY = 300;
+
+        // 音效元素
+        const winSound = document.getElementById('winSound');
+        const failSound = document.getElementById('failSound');
 
         const game1 = document.getElementById('game1');
         const game2 = document.getElementById('game2');
@@ -524,16 +541,36 @@
 
         function shakeDino(dinoFaceElement) {
             if(!dinoFaceElement) return;
-            dinoFaceElement.classList.remove('dino-shake');
+            dinoFaceElement.classList.remove('dino-shake', 'grayscale');
             void dinoFaceElement.offsetWidth;
             dinoFaceElement.classList.add('dino-shake');
             setTimeout(() => dinoFaceElement.classList.remove('dino-shake'), 600);
+        }
+
+        function setDinoGray(dinoFaceElement) {
+            if(!dinoFaceElement) return;
+            dinoFaceElement.classList.add('grayscale');
+            setTimeout(() => {
+                dinoFaceElement.classList.remove('grayscale');
+            }, 800);
         }
 
         function playAnimation(target) {
             setTimeout(() => {
                 target.classList.add('animate-in');
             }, 100);
+        }
+
+        // 播放胜利音效
+        function playWinSound() {
+            winSound.currentTime = 0;
+            winSound.play().catch(err => console.log('胜利音效播放失败:', err));
+        }
+
+        // 播放错误音效
+        function playFailSound() {
+            failSound.currentTime = 0;
+            failSound.play().catch(err => console.log('错误音效播放失败:', err));
         }
 
         // 重置游戏界面
@@ -561,6 +598,8 @@
             wrap.querySelectorAll('.food-side, .info-badge, .dino-card').forEach(el => el.style.display = 'none');
             poster.style.display = 'block';
 
+            setTimeout(playWinSound, SOUND_DELAY);
+
             setTimeout(() => {
                 poster.classList.add('animate-out');
                 setTimeout(() => {
@@ -570,7 +609,6 @@
                         resetGame('game1', 'winPoster1');
                         playAnimation(game2);
                     } else {
-                        // ====================== 核心逻辑：游戏二结束 → 回到游戏一食物选择界面 ======================
                         game2.style.display = 'none';
                         game1.style.display = 'block';
                         resetGame('game2', 'winPoster2');
@@ -598,9 +636,13 @@
             mouth.addEventListener('dragover', (e) => e.preventDefault());
             mouth.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if (e.dataTransfer.getData('text/plain') === 'meat') {
+                const foodType = e.dataTransfer.getData('text/plain');
+                if (foodType === 'meat') {
                     shakeDino(dinoFace);
                     gameWin('game1', 'winPoster1');
+                }else{
+                    setDinoGray(dinoFace);
+                    playFailSound();
                 }
             });
         }
@@ -621,9 +663,13 @@
             mouth.addEventListener('dragover', (e) => e.preventDefault());
             mouth.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if (e.dataTransfer.getData('text/plain') === 'fruit') {
+                const foodType = e.dataTransfer.getData('text/plain');
+                if (foodType === 'fruit') {
                     shakeDino(dinoFace);
                     gameWin('game2', 'winPoster2');
+                }else{
+                    setDinoGray(dinoFace);
+                    playFailSound();
                 }
             });
         }
